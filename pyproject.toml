@@ -1,0 +1,18 @@
+[project]
+name = "asr-nemo"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "torch==2.5.1+cu124",
+    "nemo-toolkit[all]>=2.2.0",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-all"}
+
+
+[[tool.uv.index]]
+name = "pytorch-all"
+url = "https://download.pytorch.org/whl/"
+explicit = true
