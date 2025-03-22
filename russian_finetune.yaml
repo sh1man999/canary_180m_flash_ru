@@ -267,13 +267,13 @@ trainer:
   devices: -1 # number of GPUs, -1 would use all available GPUs
   num_nodes: 1
   max_epochs: -1
-  max_steps: 75000 # computed at runtime if not set
+  max_steps: 100000 # computed at runtime if not set
   val_check_interval: 1.0 # Set to 0.25 to check 4 times per epoch, or an int for number of iterations
   accelerator: auto
   strategy:
     _target_: lightning.pytorch.strategies.DDPStrategy
     gradient_as_bucket_view: true
-  accumulate_grad_batches: 4 # orig 1
+  accumulate_grad_batches: 1
   gradient_clip_val: 0.0
   precision: bf16-mixed # Should be set to bf16-mixed/16-mixed for O1 and O2 to enable the AMP.
   log_every_n_steps: 100  # Interval of logging.
