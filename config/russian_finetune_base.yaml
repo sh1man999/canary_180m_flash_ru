@@ -127,7 +127,7 @@ model:
     n_fft: 512
     log: true
     frame_splicing: 1
-    dither: 1.0e-05 # orig 0.00001
+    dither: 0.00001
     pad_to: 0
     pad_value: 0.0
 
@@ -247,21 +247,21 @@ model:
 
   optim:
     name: adamw
-    lr: 5.0e-05 # default 3e-4
+    lr: 3e-4
     # optimizer arguments
     betas: [0.9, 0.98]
     # less necessity for weight_decay as we already have large augmentations with SpecAug
     # you may need weight_decay for large models, stable AMP training, small datasets, or when lower augmentations are used
     # weight decay of 0.0 with lr of 2.0 also works fine
-    weight_decay: 0.001 # default 1e-3
+    weight_decay: 1e-3
 
     # scheduler setup
     sched:
-      name: CosineAnnealing # orig InverseSquareRootAnnealing
+      name: InverseSquareRootAnnealing
       # scheduler config override
       warmup_steps: 2500
       warmup_ratio: null
-      min_lr: 1.0e-06 # default 1e-6
+      min_lr: 1e-6
 
 trainer:
   devices: -1 # number of GPUs, -1 would use all available GPUs

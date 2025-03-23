@@ -8,8 +8,8 @@ from tqdm import tqdm
 rulibri = load_dataset('bond005/rulibrispeech')
 
 # Создаём директории для файлов и манифестов
-os.makedirs('audio_files', exist_ok=True)
-os.makedirs('manifests', exist_ok=True)
+os.makedirs('../audio_files', exist_ok=True)
+os.makedirs('../manifests', exist_ok=True)
 
 
 # Функция для создания манифеста и сохранения аудио
@@ -20,7 +20,7 @@ def create_manifest(split, output_path):
             filename = os.path.basename(item["audio"]["path"])
 
             # Формируем локальный путь для сохранения
-            local_path = os.path.join("audio_files", filename)
+            local_path = os.path.join("../audio_files", filename)
 
             # Сохраняем аудио на диск
             sf.write(
@@ -43,6 +43,6 @@ def create_manifest(split, output_path):
 
 
 # Создаём манифесты и сохраняем аудио (тут можно выбрать нужные сплиты)
-create_manifest('train', 'manifests/train_manifest.json')
-create_manifest('validation', 'manifests/val_manifest.json')
-create_manifest('test', 'manifests/test_manifest.json')
+create_manifest('train', '../manifests/train_manifest.json')
+create_manifest('validation', '../manifests/val_manifest.json')
+create_manifest('test', '../manifests/test_manifest.json')

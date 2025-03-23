@@ -7,7 +7,7 @@
 Выполните скрипт для скачивания и обработки речевых данных:
 
 ```bash
-python postprocess_dataset.py
+python scripts/postprocess_dataset.py
 ```
 
 Этот скрипт подготовит необходимые манифесты и аудиофайлы для последующего обучения.
@@ -18,10 +18,10 @@ python postprocess_dataset.py
 
 ```bash
 # Предварительная обработка текстового корпуса
-python pretokenize.py
+python scripts/pretokenize.py
 
 # Создание BPE-токенизатора
-python process_asr_text_tokenizer.py \
+python scripts/process_asr_text_tokenizer.py \
   --data_file=corpus/russian_corpus.txt \
   --vocab_size=1024 \
   --data_root=./tokenizers_ru \
@@ -31,16 +31,7 @@ python process_asr_text_tokenizer.py \
   --no_lower_case \
   --log
 ```
-
-## Шаг 3: Создание специального токенизатора
-
-Создайте токенизатор для обработки служебных токенов:
-
-```bash
-python build_canary_2_special_tokenizer.py tokenizers_spl
-```
-
-Данный токенизатор обрабатывает метки языков и команды для модели, такие как `translate`, `transcribe`, `ru` и другие.
+# Закинуть токенизатор в canary_flash_tokenizers
 
 ---
 
