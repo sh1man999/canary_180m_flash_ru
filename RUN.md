@@ -12,7 +12,7 @@ python train.py \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=10000 \
+    trainer.max_steps=100000 \
     trainer.log_every_n_steps=100
 ```
 
