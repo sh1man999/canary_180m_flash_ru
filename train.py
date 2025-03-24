@@ -15,7 +15,7 @@
 """
 # Training the model
 ```sh
-python speech_to_text_aed.py \
+python train.py \
     # (Optional: --config-path=<path to dir of configs> --config-name=<name of config without .yaml>) \
     model.train_ds.tarred_audio_filepaths=<path to tar files with audio> \
     model.train_ds.manifest_filepath=<path to audio data manifest> \
@@ -51,6 +51,7 @@ python speech_to_text_aed.py \
 
 """
 import lightning.pytorch as pl
+from lightning.pytorch.callbacks import EarlyStopping
 from omegaconf import OmegaConf
 
 from nemo.collections.asr.models import EncDecMultiTaskModel
@@ -58,13 +59,21 @@ from nemo.core.config import hydra_runner
 from nemo.utils import logging, model_utils
 from nemo.utils.exp_manager import exp_manager
 from nemo.utils.trainer_utils import resolve_trainer_cfg
+from callbacks.wermetrics_callback import WERWithoutPunctuation
 
 
-@hydra_runner(config_path="../conf/speech_multitask/", config_name="fast-conformer_aed")
+
+@hydra_runner(config_path="./conf/speech_multitask/", config_name="fast-conformer_aed")
 def main(cfg):
     logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
-
-    trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer))
+    early_stop_callback = EarlyStopping(
+        monitor='val_wer_no_punct',  # Отслеживаемая метрика
+        mode='min',  # Режим мониторинга
+        patience=5,  # Число эпох терпения
+        verbose=True  # Подробный вывод информации
+    )
+    wer_no_punct_callback = WERWithoutPunctuation()
+    trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer), callbacks=[wer_no_punct_callback, early_stop_callback],)
     exp_manager(trainer, cfg.get("exp_manager", None))
 
     # Check for spl tokens to create spl_tokenizer.

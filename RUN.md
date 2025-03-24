@@ -5,15 +5,15 @@
 ### Запуск обучения
 
 ```bash
-python scripts/speech_to_text_aed.py \
-    --config-path=../config \
+python train.py \
+    --config-path=./config \
     --config-name=canary-180m-flash-finetune.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=10 \
-    trainer.log_every_n_steps=1
+    trainer.max_steps=10000 \
+    trainer.log_every_n_steps=100
 ```
 
 ### Запуск отдельного тестирования
@@ -21,7 +21,7 @@ python scripts/speech_to_text_aed.py \
 Если вам нужно протестировать уже обученную модель:
 
 ```bash
-python speech_to_text_aed.py \
+python train.py \
     --config-path=./config \
     --config-name=canary-180m-flash-finetune \
     fit=False \
