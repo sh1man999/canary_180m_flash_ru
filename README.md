@@ -23,7 +23,7 @@ python scripts/pretokenize.py
 # Создание BPE-токенизатора
 python scripts/process_asr_text_tokenizer.py \
   --data_file=corpus/russian_corpus.txt \
-  --vocab_size=1024 \
+  --vocab_size=512 \
   --data_root=./tokenizers_ru \
   --tokenizer="spe" \
   --spe_type=bpe \

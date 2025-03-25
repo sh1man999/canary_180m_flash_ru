@@ -128,10 +128,10 @@ class WERWithoutPunctuation(pl.Callback):
             logging.info("╔════════════════════════════════════════════════════════════╗")
             logging.info("║             МЕТРИКИ КАЧЕСТВА РАСПОЗНАВАНИЯ                 ║")
             logging.info("╠════════════════════════════════════════════════════════════╣")
-            logging.info(f"║ WER с пунктуацией:    {format_wer(original_wer):<35} ║")
-            logging.info(f"║ WER без пунктуации:   {format_wer(wer_no_punct):<35} ║")
+            logging.info(f"║ WER с пунктуацией:  {format_wer(original_wer):<35}  ║")
+            logging.info(f"║ WER без пунктуации: {format_wer(wer_no_punct):<35}  ║")
             logging.info("╠════════════════════════════════════════════════════════════╣")
-            logging.info(f"║ Обработано примеров:  {len(cleaned_references):<35}  ║")
+            logging.info(f"║ Обработано примеров:{len(cleaned_references):<35}  ║")
             logging.info("╚════════════════════════════════════════════════════════════╝")
 
         except Exception as e:
