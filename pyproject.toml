@@ -5,11 +5,14 @@ description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
     "torch==2.5.1+cu124",
+    "torchaudio==2.5.1+cu124",
     "nemo-toolkit[all]>=2.2.0",
+    "pyaudio>=0.2.14",
 ]
 
 [tool.uv.sources]
 torch = { index = "pytorch-all"}
+torchaudio = { index = "pytorch-all"}
 
 
 [[tool.uv.index]]

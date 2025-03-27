@@ -4,7 +4,7 @@ from nemo.collections.asr.models import EncDecMultiTaskModel
 def main():
     canary_model = EncDecMultiTaskModel.restore_from(
         './canary_results/canary-180m-flash-finetune/checkpoints/canary-180m-flash-finetune.nemo')
-    output = canary_model.transcribe(['test.wav'],
+    output = canary_model.transcribe(['aes.wav'],
                                      source_lang='ru',
                                      target_lang='ru',
                                      pnc='yes')
