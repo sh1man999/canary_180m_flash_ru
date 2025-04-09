@@ -1,4 +1,5 @@
-## Подготовка датасета
+## Подготовка к обучению
+
 
 ### В доке написано что для эффективного использования GPU при обучении, нужно использовать oomptimizer 
 ### Пункт Pushing GPU utilization to the limits with bucketing and OOMptimizer
@@ -39,7 +40,7 @@ python train.py \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=60000 \
-    trainer.log_every_n_steps=100 \
+    trainer.log_every_n_steps=1000 \
     init_from_pretrained_model.model0.name="nvidia/canary-180m-flash" \
     init_from_pretrained_model.model0.exclude=[\"transf_decoder._embedding.token_embedding\",\"log_softmax.mlp.layer0\"]
 ```
@@ -55,7 +56,7 @@ python train.py \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=60000 \
-    trainer.log_every_n_steps=100 \
+    trainer.log_every_n_steps=1000 \
     init_from_ptl_ckpt="./models/last.ckpt"
     
 ```
