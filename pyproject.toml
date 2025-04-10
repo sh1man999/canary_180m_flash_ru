@@ -27,13 +27,9 @@ explicit = true
 
 [tool.setuptools]
 packages = [
-    "models",
-    "corpus",
     "configs",
-    "datasets",
     "callbacks",
     "entrypoint",
     "dataset_downloader",
-    "canary_flash_tokenizers",
     "utils"
 ]
