@@ -71,7 +71,7 @@ model:
     batch_size: ${batch_size}
     use_start_end_token: true
     use_bucketing: false
-    manifest_filepath: ./datasets/rulibri/test_manifest.json
+    manifest_filepath: ./datasets/test_manifest.json
     sample_rate: ${model.sample_rate}
     text_field: text
     lang_field: target_lang

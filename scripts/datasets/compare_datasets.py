@@ -1,11 +1,9 @@
 import os
-import json
 import argparse
-from pathlib import Path
 from collections import defaultdict
 from tqdm import tqdm
 
-from config import BASE_DIR
+from entrypoint.config import BASE_DIR
 
 
 def combine_manifests(exclude_datasets=None):

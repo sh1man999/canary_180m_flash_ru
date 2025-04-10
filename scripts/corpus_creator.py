@@ -1,7 +1,7 @@
 import glob
 import json
 import os
-from config import BASE_DIR
+from entrypoint.config import BASE_DIR
 
 
 def main():
