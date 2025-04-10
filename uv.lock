@@ -223,7 +223,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/2d/6a/885bc91484e1aa8f6
 [[package]]
 name = "asr-nemo"
 version = "0.1.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "nemo-toolkit", extra = ["all"] },
     { name = "pyaudio" },
