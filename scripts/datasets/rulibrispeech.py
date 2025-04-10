@@ -8,5 +8,7 @@ if __name__ == '__main__':
     cfg = HFDatasetConversionConfig(
         path="Sh1man/rulibrispeech",
         output_dir=os.path.join(BASE_DIR, 'datasets', 'rulibrispeech'),
+        audio_path='wav'
+
     )
     download(cfg)
