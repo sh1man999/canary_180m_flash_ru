@@ -1,3 +1,6 @@
+# install ubuntu 24 dependencies
+sudo apt-get install portaudio19-dev
+
 # Подготовка русскоязычной модели Canary ASR
 
 В этом документе описаны шаги по подготовке и обучению модели распознавания речи для русского языка на базе архитектуры Canary.
