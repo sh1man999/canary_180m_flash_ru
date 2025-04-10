@@ -14,7 +14,7 @@ from utils.normalizer_text import normalize_text
 def prepare_output_dirs(cfg: HFDatasetConversionConfig):
     """
     Prepare output directories and subfolders as needed.
-    Also prepare the arguments of the config with these directories.
+    Also prepare the arguments of the configs with these directories.
     """
     output_dir = os.path.abspath(cfg.output_dir)
     output_dir = os.path.join(output_dir, cfg.path)
@@ -89,7 +89,7 @@ def build_map_dataset_to_nemo_func(cfg: HFDatasetConversionConfig, basedir):
     """
     Helper method to run in batch mode over a mapped Dataset.
 
-    Creates a function that can be passed to Dataset.map() containing the config and basedir.
+    Creates a function that can be passed to Dataset.map() containing the configs and basedir.
     Useful to map a HF dataset to NeMo compatible format in an efficient way for offline processing.
 
     Returns:

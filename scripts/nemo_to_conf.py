@@ -7,7 +7,7 @@ from omegaconf import OmegaConf
 if 'canary_model' not in locals():
     canary_model = EncDecMultiTaskModel.from_pretrained('nvidia/canary-180m-flash')
 
-base_model_cfg = OmegaConf.load("../config/base.yaml")
+base_model_cfg = OmegaConf.load("../configs/base.yaml")
 
 
 base_model_cfg['name'] = 'canary-180m-flash-finetune'
@@ -27,5 +27,5 @@ base_model_cfg['model']['encoder'] = canary_model._cfg['encoder']
 base_model_cfg['model']['transf_decoder'] = canary_model._cfg['transf_decoder']
 base_model_cfg['model']['transf_encoder'] = canary_model._cfg['transf_encoder']
 cfg = OmegaConf.create(base_model_cfg)
-with open("../config/base-canary-180m-flash-finetune-ru.yaml", "w") as f:
+with open("../configs/base-canary-180m-flash-finetune-ru.yaml", "w") as f:
     OmegaConf.save(cfg, f)

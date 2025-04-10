@@ -253,7 +253,7 @@ class FloatList(click.Option):
     help="Full path to NeMo's module corresponding to CONFIG_PATH, e.g. 'nemo.collections.asr.models.EncDecMultiTaskModel'.",
 )
 @click.option(
-    "-c", "--config-path", type=str, default=None, help="Path to the training configuration file for MODULE_NAME."
+    "-c", "--configs-path", type=str, default=None, help="Path to the training configuration file for MODULE_NAME."
 )
 @click.option("-o", "--optimizer-name", type=str, default="adamw", help="Name of optimizer to use.")
 @click.option(
@@ -339,7 +339,7 @@ def oomptimizer(
     The latter is more flexible but requires the user to provide two separate arguments. Examples:
     * python oomptimizer.py --pretrained-name nvidia/canary-1b
     * python oomptimizer.py --module-name nemo.collections.asr.models.EncDecMultiTaskModel \
-        --config-path examples/asr/conf/speech_multitask/fast-conformer_aed.yaml
+        --configs-path examples/asr/conf/speech_multitask/fast-conformer_aed.yaml
 
     Dynamic bucketing is notoriously difficult to tune as you risk running into CUDA OOM many steps into the training.
     In order to simplify finding the optimal settings, OOMptimizer scans each bucket to find the maximum possible
@@ -373,12 +373,12 @@ def oomptimizer(
         if pretrained_name is not None:
             assert (
                 config_path is None and module_name is None
-            ), "--pretrained-name cannot be used together with --module-name/--config-path"
+            ), "--pretrained-name cannot be used together with --module-name/--configs-path"
             click.echo(f"Intializing ASR model from pretrained checkpoint {pretrained_name}.")
             model = ASRModel.from_pretrained(pretrained_name, trainer=trainer).to(device)
         else:
-            assert config_path is not None, "--module-name requires --config-path to be specified as well."
-            assert module_name is not None, "--config-path requires --module-name to be specified as well."
+            assert config_path is not None, "--module-name requires --configs-path to be specified as well."
+            assert module_name is not None, "--configs-path requires --module-name to be specified as well."
             cfg = OmegaConf.load(config_path)
             namespace, name = module_name.rsplit('.', maxsplit=1)
             model_cls = getattr(importlib.import_module(namespace), name)

@@ -1,9 +1,9 @@
 # It contains the default values for training an autoregressive FastConformer-Transformer AED model with sub-word encoding.
 
-# Architecture and training config:
-# Default learning parameters in this config are set for effective batch size of 2K. To train it with smaller effective
+# Architecture and training configs:
+# Default learning parameters in this configs are set for effective batch size of 2K. To train it with smaller effective
 # batch sizes, you may need to re-tune the learning parameters or use higher accumulate_grad_batches.
-# Here are the recommended configs for different variants of FastConformer-Transformer, other parameters are the same as in this config file.
+# Here are the recommended configs for different variants of FastConformer-Transformer, other parameters are the same as in this configs file.
 # One extra (linear projection) layer is added between FastConformer encoder and Transformer decoder if they have different hidden sizes
 # It is recommended to initialize FastConformer with ASR/SSL pre-trained encoder for better accuracy and faster convergence
 
@@ -260,7 +260,7 @@ model:
     # scheduler setup
     sched:
       name: InverseSquareRootAnnealing
-      # scheduler config override
+      # scheduler configs override
       warmup_steps: 2500
       warmup_ratio: null
       min_lr: 1e-6

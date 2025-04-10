@@ -59,7 +59,7 @@ def parse_args():
         '3) "[[path1.json,weight1],[path2.json,weight2],...]" - any collection of weighted NeMo manifests; '
         '4) "input_cfg.yaml" - a new option supporting input configs, same as in model training \'input_cfg\' arg; '
         '5) "path/to/shar_data" - a path to Lhotse Shar data directory; '
-        '6) "key=val" - in case none of the previous variants cover your case: "key" is the key you\'d use in NeMo training config with its corresponding value ',
+        '6) "key=val" - in case none of the previous variants cover your case: "key" is the key you\'d use in NeMo training configs with its corresponding value ',
     )
     parser.add_argument(
         "-t",
@@ -360,7 +360,7 @@ def main():
     tps_thresholds = "[" + ",".join(f"{t:.2f}" for t in tps_thresholds) + "]"
     if not args.quiet:
         duration_filter.print_report()
-    print("Use the following options in your config:")
+    print("Use the following options in your configs:")
     print(f"\tuse_bucketing=1")
     print(f"\tnum_buckets={args.buckets}")
     print(f"\tbucket_duration_bins={duration_bins}")
