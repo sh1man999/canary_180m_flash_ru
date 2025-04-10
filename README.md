@@ -10,6 +10,7 @@ sudo apt-get install portaudio19-dev
 Выполните скрипт для скачивания датасета и обработки речевых данных:
 ```bash
 python scripts/datasets/common_voice_21.py
+python scripts/datasets/rulibrispeech.py
 ```
 
 Объединение датасетов
