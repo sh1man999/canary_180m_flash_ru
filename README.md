@@ -6,13 +6,13 @@
 
 Выполните скрипт для скачивания датасета и обработки речевых данных:
 ```bash
-python scripts/dataset_loaders/rulibrispeech.py
+python scripts/datasets/common_voice_21.py
 ```
 
 Объединение датасетов
 Этот скрипт подготовит необходимые манифесты и аудиофайлы для последующего обучения.
 ```bash
-python scripts/dataset_loaders/compare_datasets.py
+python scripts/datasets/compare_datasets.py
 ```
 
 ## Шаг 2: Создание русского токенизатора

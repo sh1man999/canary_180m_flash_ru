@@ -35,7 +35,7 @@ def combine_manifests(exclude_datasets=None):
 
         # Ищем все манифесты в директории датасета
         for file_name in os.listdir(dataset_path):
-            if file_name.endswith('_manifest.json'):
+            if file_name.endswith('_manifest.jsonl'):
                 # Определяем тип манифеста (train, validate, test)
                 manifest_type = file_name.split('_')[0]
                 manifest_path = os.path.join(dataset_path, file_name)
@@ -44,7 +44,7 @@ def combine_manifests(exclude_datasets=None):
 
     # Объединяем и сохраняем манифесты по типам
     for manifest_type, manifest_files in manifest_groups.items():
-        output_path = os.path.join(datasets_dir, f'{manifest_type}_manifest.json')
+        output_path = os.path.join(datasets_dir, f'{manifest_type}_manifest.jsonl')
 
         print(f"Объединение {len(manifest_files)} {manifest_type} манифестов...")
 
@@ -64,7 +64,7 @@ def combine_manifests(exclude_datasets=None):
 
                 print(f"  - {dataset_name}: {entries_count} записей")
 
-        print(f"Объединенный {manifest_type}_manifest.json содержит {total_entries} записей")
+        print(f"Объединенный {manifest_type}_manifest.jsonl содержит {total_entries} записей")
         print(f"Сохранено в {output_path}")
 
 
