@@ -16,7 +16,7 @@
 # Training the model
 ```sh
 python train.py \
-    # (Optional: --configs-path=<path to dir of configs> --configs-name=<name of configs without .yaml>) \
+    # (Optional: --config-path=<path to dir of config> --config-name=<name of config without .yaml>) \
     model.train_ds.tarred_audio_filepaths=<path to tar files with audio> \
     model.train_ds.manifest_filepath=<path to audio data manifest> \
     model.train_ds.batch_duration=360 \
@@ -65,7 +65,7 @@ from callbacks.wermetrics_callback import WERWithoutPunctuation
 
 @hydra_runner(config_path="./conf/speech_multitask/", config_name="fast-conformer_aed")
 def main(cfg):
-    logging.info(f'Hydra configs: {OmegaConf.to_yaml(cfg)}')
+    logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
     early_stop_callback = EarlyStopping(
         monitor='val_wer_no_punct',  # Отслеживаемая метрика
         mode='min',  # Режим мониторинга
@@ -78,7 +78,7 @@ def main(cfg):
 
     # Check for spl tokens to create spl_tokenizer.
     if cfg.get("spl_tokens"):
-        logging.info("Detected spl_tokens configs. Building tokenizer.")
+        logging.info("Detected spl_tokens config. Building tokenizer.")
         spl_cfg = cfg["spl_tokens"]
         spl_tokenizer_cls = model_utils.import_class_by_path(cfg.model.tokenizer.custom_tokenizer["_target_"])
         spl_tokenizer_cls.build_special_tokenizer(
@@ -88,7 +88,7 @@ def main(cfg):
 
     aed_model = EncDecMultiTaskModel(cfg=cfg.model, trainer=trainer)
 
-    # Initialize the weights of the model from another model, if provided via configs
+    # Initialize the weights of the model from another model, if provided via config
     aed_model.maybe_init_from_pretrained_checkpoint(cfg)
     if cfg.fit:
         trainer.fit(aed_model)

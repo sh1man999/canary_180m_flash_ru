@@ -33,8 +33,8 @@ python scripts/oomptimizer.py \
 
 ```bash
 python train.py \
-    --configs-path=./configs \
-    --configs-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
@@ -49,8 +49,8 @@ python train.py \
 
 ```bash
 python train.py \
-    --configs-path=./configs \
-    --configs-name=canary-180m-flash-finetune-ru.yaml \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune-ru.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
@@ -64,8 +64,8 @@ python train.py \
 
 ```bash
 python train.py \
-    --configs-path=./configs \
-    --configs-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
@@ -81,8 +81,8 @@ python train.py \
 
 ```bash
 python train.py \
-    --configs-path=./configs \
-    --configs-name=canary-180m-flash-finetune \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune \
     fit=False \
     model.test_ds.manifest_filepath=manifests/test_manifest.json \
     exp_manager.create_wandb_logger=False \
