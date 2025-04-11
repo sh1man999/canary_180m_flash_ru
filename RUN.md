@@ -34,12 +34,12 @@ python scripts/oomptimizer.py \
 ```bash
 python train.py \
     --configs-path=./configs \
-    --configs-name=canary-180m-flash-finetune-ru.yaml \
+    --configs-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=60000 \
+    trainer.max_steps=100000 \
     trainer.log_every_n_steps=1000 \
     init_from_pretrained_model.model0.name="nvidia/canary-180m-flash" \
     init_from_pretrained_model.model0.exclude=[\"transf_decoder._embedding.token_embedding\",\"log_softmax.mlp.layer0\"]
