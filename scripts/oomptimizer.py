@@ -253,7 +253,7 @@ class FloatList(click.Option):
     help="Full path to NeMo's module corresponding to CONFIG_PATH, e.g. 'nemo.collections.asr.models.EncDecMultiTaskModel'.",
 )
 @click.option(
-    "-c", "--configs-path", type=str, default=None, help="Path to the training configuration file for MODULE_NAME."
+    "-c", "--config-path", type=str, default=None, help="Path to the training configuration file for MODULE_NAME."
 )
 @click.option("-o", "--optimizer-name", type=str, default="adamw", help="Name of optimizer to use.")
 @click.option(
@@ -339,7 +339,7 @@ def oomptimizer(
     The latter is more flexible but requires the user to provide two separate arguments. Examples:
     * python oomptimizer.py --pretrained-name nvidia/canary-1b
     * python oomptimizer.py --module-name nemo.collections.asr.models.EncDecMultiTaskModel \
-        --configs-path examples/asr/conf/speech_multitask/fast-conformer_aed.yaml
+        --config-path examples/asr/conf/speech_multitask/fast-conformer_aed.yaml
 
     Dynamic bucketing is notoriously difficult to tune as you risk running into CUDA OOM many steps into the training.
     In order to simplify finding the optimal settings, OOMptimizer scans each bucket to find the maximum possible
