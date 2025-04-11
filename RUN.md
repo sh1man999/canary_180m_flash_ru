@@ -41,8 +41,8 @@ python train.py \
     exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=100000 \
     trainer.log_every_n_steps=1000 \
-    +init_from_pretrained_model.model0.name="nvidia/canary-180m-flash" \
-    +init_from_pretrained_model.model0.exclude=[\"transf_decoder._embedding.token_embedding\",\"log_softmax.mlp.layer0\"]
+    "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
+    "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
 ```
 
 ### Запуск обучения с контрольной точки без oomptimizer
