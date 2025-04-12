@@ -39,12 +39,35 @@ python train.py \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
+    trainer.val_check_interval=180 \
+    +trainer.limit_train_batches=200 \
+    num_workers=32 \
+    batch_size=128 \
+    +model.train_ds.num_cuts_for_bins_estimate=10000 \
+    "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
+    "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
+
+```
+
+### Запуск обучения с добавлением нового языка без oomptimizer
+Чем больше batch_duration тем болше нужна vram. Начать можно с 360
+```bash
+python train.py \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune-ru.yaml \
+    name="canary-180m-flash-finetune" \
+    exp_manager.create_wandb_logger=False \
+    exp_manager.exp_dir="canary_results" \
+    exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=100000 \
-    trainer.log_every_n_steps=1000 \
+    num_workers=16 \
+    batch_size=128 \
+    model.train_ds.batch_duration=1000 \
+    model.train_ds.num_buckets=30 \
+    +model.train_ds.num_cuts_for_bins_estimate=10000 \
     "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
     "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
 ```
-
 ### Запуск обучения с контрольной точки без oomptimizer
 
 ```bash
@@ -55,23 +78,10 @@ python train.py \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=60000 \
+    trainer.max_steps=100000 \
     trainer.log_every_n_steps=1000 \
-    +init_from_ptl_ckpt="./models/last.ckpt"
-    
-```
-### Запуск обучения с контрольной точки c oomptimizer
-
-```bash
-python train.py \
-    --config-path=./configs \
-    --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
-    name="canary-180m-flash-finetune" \
-    exp_manager.create_wandb_logger=False \
-    exp_manager.exp_dir="canary_results" \
-    exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=60000 \
-    trainer.log_every_n_steps=100 \
+    num_workers=32 \
+    batch_size=256 \
     +init_from_ptl_ckpt="./models/last.ckpt"
 ```
 
@@ -93,5 +103,5 @@ python train.py \
 
 Мониторинг обучения можно осуществлять через TensorBoard, запустив команду:
 ```bash
-tensorboard --logdir=./canary_results
+tensorboard --logdir=./canary_results --port=8090 --host 0.0.0.0
 ```
