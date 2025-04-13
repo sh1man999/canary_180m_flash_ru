@@ -1,6 +1,6 @@
 name: canary-180m-flash-finetune
-num_workers: 16
-batch_size: 128
+num_workers: 8
+batch_size: 64
 fit: true
 spl_tokens:
   model_dir: canary_flash_tokenizers/spl_tokens
