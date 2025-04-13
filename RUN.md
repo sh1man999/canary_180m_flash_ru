@@ -31,26 +31,9 @@ python scripts/oomptimizer.py \
 
 ### Запуск обучения с добавлением нового языка (Если новый язык уже добавлен в модель, то второй вариант использовать !)
 
-```bash
-python train.py \
-    --config-path=./configs \
-    --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
-    name="canary-180m-flash-finetune" \
-    exp_manager.create_wandb_logger=False \
-    exp_manager.exp_dir="canary_results" \
-    exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.val_check_interval=180 \
-    +trainer.limit_train_batches=200 \
-    num_workers=16 \
-    batch_size=32 \
-    +model.train_ds.num_cuts_for_bins_estimate=10000 \
-    "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
-    "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
-
-```
-
-### Запуск обучения с добавлением нового языка без oomptimizer
+### без oomptimizer
 Чем больше batch_duration тем болше нужна vram. Начать можно с 360
+Оптимальный batch_size 128 на 4 карты v100 32gb
 ```bash
 python train.py \
     --config-path=./configs \
@@ -80,10 +63,29 @@ python train.py \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=100000 \
-    num_workers=16 \
     batch_size=128 \
     +init_from_ptl_ckpt="./models/last.ckpt"
 ```
+
+### Запуск обучения с контрольной точки c oomptimizer (плохо тестировал !!!)
+
+```bash
+python train.py \
+    --config-path=./configs \
+    --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
+    name="canary-180m-flash-finetune" \
+    exp_manager.create_wandb_logger=False \
+    exp_manager.exp_dir="canary_results" \
+    exp_manager.resume_ignore_no_checkpoint=true \
+    trainer.val_check_interval=180 \
+    +trainer.limit_train_batches=200 \
+    batch_size=128 \
+    +model.train_ds.num_cuts_for_bins_estimate=10000 \
+    "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
+    "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
+
+```
+
 
 ### Запуск отдельного тестирования
 
