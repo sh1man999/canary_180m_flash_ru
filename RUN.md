@@ -35,7 +35,7 @@ python scripts/oomptimizer.py \
 Чем больше batch_duration тем болше нужна vram. Начать можно с 360
 Оптимальный batch_size 128 на 4 карты v100 32gb
 ```bash
-python train.py \
+NCCL_P2P_LEVEL=NVL NCCL_DEBUG=INFO python train.py \
     --config-path=./configs \
     --config-name=canary-180m-flash-finetune-ru.yaml \
     name="canary-180m-flash-finetune" \
@@ -52,7 +52,7 @@ python train.py \
     "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
 ```
 ```bash
-python train.py \
+NCCL_P2P_LEVEL=NVL python train.py \
     --config-path=./configs \
     --config-name=canary-180m-flash-finetune-ru.yaml \
     name="canary-180m-flash-finetune" \
@@ -72,7 +72,7 @@ python train.py \
 ### Запуск обучения с контрольной точки без oomptimizer
 
 ```bash
-python train.py \
+NCCL_P2P_LEVEL=NVL python train.py \
     --config-path=./configs \
     --config-name=canary-180m-flash-finetune-ru.yaml \
     name="canary-180m-flash-finetune" \
@@ -87,7 +87,7 @@ python train.py \
 ### Запуск обучения с контрольной точки c oomptimizer (плохо тестировал !!!)
 
 ```bash
-python train.py \
+NCCL_P2P_LEVEL=NVL python train.py \
     --config-path=./configs \
     --config-name=canary-180m-flash-finetune-ru_oomptimizer.yaml \
     name="canary-180m-flash-finetune" \
