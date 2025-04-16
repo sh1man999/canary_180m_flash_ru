@@ -17,6 +17,7 @@ class NoPunctWERAdapter(pl.Callback):
 
     def __init__(self):
         super().__init__()
+        self.no_punct_metric = None  # Унифицированное именование атрибута
         self.metric = None
         self._original_update = None
         self._original_compute = None
