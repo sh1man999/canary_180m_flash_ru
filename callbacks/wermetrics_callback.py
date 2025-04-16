@@ -5,62 +5,41 @@ from nemo.utils import logging
 from metrics.no_punct_wer import NoPunctWER
 
 
-class ASRModelWithCustomMetrics(pl.LightningModule):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Инициализируем кастомную метрику WER без пунктуации
+class NoPunctWERCallback(pl.Callback):
+    def __init__(self):
+        super().__init__()
+        self.wer_no_punct = None
+
+    def on_validation_start(self, trainer, pl_module):
+        # Создаем метрику в начале валидации
         self.wer_no_punct = NoPunctWER()
 
-    def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        # Выполняем стандартную логику валидации
-        outputs = super().validation_step(batch, batch_idx, dataloader_idx)
-
-        # Извлекаем предсказания и эталоны для кастомной метрики
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        # Та же логика сбора данных из batch, что и выше...
         signal, signal_len, transcript, transcript_len = batch
 
-        # Получаем предсказания модели
+        # Получаем предсказания и эталоны
         with torch.no_grad():
-            log_probs, encoded_len, *_ = self.forward(
+            log_probs, encoded_len, *_ = pl_module.forward(
                 input_signal=signal,
                 input_signal_length=signal_len
             )
 
-            # Преобразуем предсказания в токены с помощью декодера
-            predictions = self.wer.decoding.ctc_decoder_predictions_tensor(
-                log_probs, encoded_len, return_hypotheses=True
-            )
+            # Получаем гипотезы и эталоны
+            hypotheses = self._get_hypotheses(pl_module, log_probs, encoded_len)
+            references = self._get_references(pl_module, transcript, transcript_len)
 
-            # Получаем текстовые гипотезы
-            hypotheses = [hyp.text if hasattr(hyp, 'text') else hyp for hyp in predictions]
-
-            # Преобразуем эталоны из токенов в текст
-            references = []
-            for idx in range(transcript.size(0)):
-                target_len = transcript_len[idx].item()
-                target_tokens = transcript[idx][:target_len].cpu().numpy().tolist()
-                ref_text = self.wer.decoding.decode_tokens_to_str(target_tokens)
-                references.append(ref_text)
-
-            # Обновляем метрику без пунктуации
+            # Обновляем метрику
             self.wer_no_punct.update(hypotheses, references)
 
-        return outputs
-
-    def on_validation_epoch_end(self):
-        # Вызываем оригинальную логику
-        super().on_validation_epoch_end()
-
-        # Вычисляем значение метрики без пунктуации
+    def on_validation_epoch_end(self, trainer, pl_module):
+        # Вычисляем и логируем метрику
         wer_no_punct_value = self.wer_no_punct.compute()
+        pl_module.log('val_wer_no_punct', wer_no_punct_value, prog_bar=True)
+        trainer.callback_metrics["val_wer_no_punct"] = wer_no_punct_value
 
-        # Логируем метрику (синхронизация уже обеспечена метрикой)
-        self.log('val_wer_no_punct', wer_no_punct_value, prog_bar=True)
-
-        # Добавляем в callback_metrics для EarlyStopping
-        self.trainer.callback_metrics["val_wer_no_punct"] = wer_no_punct_value
-
-        # Форматируем вывод для лога
-        self._print_metrics(wer_no_punct_value)
+        # Выводим в лог
+        self._print_metrics(pl_module, wer_no_punct_value)
 
     def _print_metrics(self, wer_no_punct):
         """Форматирует и выводит метрики в лог"""
