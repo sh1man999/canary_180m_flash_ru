@@ -21,6 +21,8 @@ class NoPunctWERAdapter(pl.Callback):
         self.metric = None
         self._original_update = None
         self._original_compute = None
+        # Флаги состояния
+        self._is_instrumented = False  # Правильно инициализируем этот атрибут!
 
     def setup(self, trainer, pl_module, stage=None):
         # Инициализация метрики
