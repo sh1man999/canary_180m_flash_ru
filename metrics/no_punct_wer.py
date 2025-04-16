@@ -5,8 +5,8 @@ from torchmetrics import Metric
 
 class NoPunctWER(Metric):
     """
-    Оптимизированная метрика WER без пунктуации, корректно работающая
-    в распределенной среде. Автоматически синхронизирует данные между ранками.
+    Высокопроизводительная метрика WER без пунктуации, оптимизированная для
+    распределенного выполнения в PyTorch Lightning.
     """
 
     def __init__(self, dist_sync_on_step=False):
@@ -21,13 +21,16 @@ class NoPunctWER(Metric):
 
     def update(self, preds, targets):
         """
-        Обновляет метрику новыми данными. Автоматически обрабатывает
-        очистку текста от пунктуации и вычисление расстояния Левенштейна.
+        Обновляет метрику новыми данными.
 
         Args:
             preds (List[str]): Список предсказанных текстов
             targets (List[str]): Список эталонных текстов
         """
+        # Проверка валидности входных данных
+        if not preds or not targets or len(preds) != len(targets):
+            return
+
         # Очищаем тексты от пунктуации
         cleaned_preds = [self._clean_text(p) for p in preds]
         cleaned_targets = [self._clean_text(t) for t in targets]
@@ -40,10 +43,10 @@ class NoPunctWER(Metric):
             target_words = target.split()
 
             # Вычисляем расстояние Левенштейна
-            edit_distance = self._levenshtein_distance(pred_words, target_words)
+            distance = self._levenshtein_distance(pred_words, target_words)
 
             # Аккумулируем результаты
-            batch_errors += edit_distance
+            batch_errors += distance
             batch_words += len(target_words)
 
         # Обновляем состояние метрики
@@ -80,8 +83,7 @@ class NoPunctWER(Metric):
     def _levenshtein_distance(self, source, target):
         """
         Вычисляет расстояние Левенштейна между двумя последовательностями.
-        Оптимизированная реализация с использованием матрицы динамического
-        программирования.
+        Оптимизированная реализация с использованием динамического программирования.
 
         Args:
             source (List): Исходная последовательность слов
@@ -90,28 +92,36 @@ class NoPunctWER(Metric):
         Returns:
             int: Расстояние Левенштейна
         """
-        # Создаем матрицу размером (len(source)+1) x (len(target)+1)
-        distance_matrix = [[0 for _ in range(len(target) + 1)] for _ in range(len(source) + 1)]
+        # Оптимизация для пустых последовательностей
+        if len(source) == 0:
+            return len(target)
+        if len(target) == 0:
+            return len(source)
 
-        # Инициализируем первую строку и первый столбец
+        # Оптимизация памяти: храним только текущую и предыдущую строки
+        # вместо всей матрицы расстояний
+        previous_row = range(len(target) + 1)
+        current_row = [0] * (len(target) + 1)
+
         for i in range(1, len(source) + 1):
-            distance_matrix[i][0] = i
+            # Инициализация первого элемента текущей строки
+            current_row[0] = i
 
-        for j in range(1, len(target) + 1):
-            distance_matrix[0][j] = j
-
-        # Заполняем матрицу
-        for i in range(1, len(source) + 1):
             for j in range(1, len(target) + 1):
-                # Стоимость замены
-                substitution_cost = 0 if source[i - 1] == target[j - 1] else 1
+                # Вычисляем стоимость операций
+                deletion = previous_row[j] + 1
+                insertion = current_row[j - 1] + 1
+                substitution = previous_row[j - 1]
 
-                # Выбираем минимальную операцию
-                distance_matrix[i][j] = min(
-                    distance_matrix[i - 1][j] + 1,  # Удаление
-                    distance_matrix[i][j - 1] + 1,  # Вставка
-                    distance_matrix[i - 1][j - 1] + substitution_cost  # Замена или совпадение
-                )
+                # Если слова не совпадают, увеличиваем стоимость замены
+                if source[i - 1] != target[j - 1]:
+                    substitution += 1
 
-        # Возвращаем итоговое расстояние Левенштейна
-        return distance_matrix[len(source)][len(target)]
+                # Выбираем минимальную стоимость операции
+                current_row[j] = min(deletion, insertion, substitution)
+
+            # Обновляем предыдущую строку для следующей итерации
+            previous_row, current_row = current_row, previous_row
+
+        # В последнем обмене previous_row содержит актуальные значения
+        return previous_row[len(target)]
