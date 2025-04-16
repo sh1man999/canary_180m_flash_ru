@@ -59,7 +59,7 @@ from nemo.core.config import hydra_runner
 from nemo.utils import logging, model_utils
 from nemo.utils.exp_manager import exp_manager
 from nemo.utils.trainer_utils import resolve_trainer_cfg
-from callbacks.wer_metrics_callback import NoPunctWERAdapter
+from callbacks.wer_metrics_callback import NoPunctWERCallback
 
 
 
@@ -72,7 +72,7 @@ def main(cfg):
         patience=5,  # Число эпох терпения
         verbose=True  # Подробный вывод информации
     )
-    wer_no_punct_callback = NoPunctWERAdapter()
+    wer_no_punct_callback = NoPunctWERCallback()
     trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer), callbacks=[wer_no_punct_callback, early_stop_callback],)
     exp_manager(trainer, cfg.get("exp_manager", None))
 

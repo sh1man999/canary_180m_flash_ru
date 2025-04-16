@@ -1,11 +1,7 @@
 import re
-import torch
-from typing import List, Optional, Union
-from torchmetrics import Metric
+from typing import List
 
-import re
 import torch
-from typing import List, Optional, Union, Dict, Any
 from torchmetrics import Metric
 
 
