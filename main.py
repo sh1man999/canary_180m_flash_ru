@@ -2,9 +2,10 @@ from nemo.collections.asr.models import EncDecMultiTaskModel
 
 
 def main():
+    # audio max len 30 sec
     canary_model = EncDecMultiTaskModel.restore_from(
-        './canary_results/canary-180m-flash-finetune/checkpoints/canary-180m-flash-finetune.nemo')
-    output = canary_model.transcribe(['aes.wav'],
+        './models/canary-180m-flash-finetune.nemo')
+    output = canary_model.transcribe(['aes_l.wav'],
                                      source_lang='ru',
                                      target_lang='ru',
                                      pnc='yes')

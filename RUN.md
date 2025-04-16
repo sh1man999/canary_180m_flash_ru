@@ -35,14 +35,14 @@ python scripts/oomptimizer.py \
 Чем больше batch_duration тем болше нужна vram. Начать можно с 360
 Оптимальный batch_size 128 на 4 карты v100 32gb
 ```bash
-NCCL_P2P_LEVEL=NVL NCCL_DEBUG=INFO python train.py \
+NCCL_P2P_LEVEL=NVL NCCL_DEBUG=INFO TORCH_NCCL_TRACE_BUFFER_SIZE=1024 TORCH_ASYNC_ERROR_HANDLING=1 TORCH_DISTRIBUTED_DEBUG=DETAIL python train.py \
     --config-path=./configs \
     --config-name=canary-180m-flash-finetune-ru.yaml \
     name="canary-180m-flash-finetune" \
     exp_manager.create_wandb_logger=False \
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
-    trainer.max_steps=100000 \
+    trainer.max_steps=120000 \
     batch_size=128 \
     trainer.check_val_every_n_epoch=2 \
     model.train_ds.batch_duration=360 \

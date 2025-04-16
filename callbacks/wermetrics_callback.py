@@ -4,7 +4,6 @@ import torch
 import lightning.pytorch as pl
 from nemo.utils import logging
 from nemo.collections.asr.metrics.wer import word_error_rate
-#from torchmetrics.text import WordErrorRate
 
 
 class WERWithoutPunctuation(pl.Callback):
@@ -14,64 +13,57 @@ class WERWithoutPunctuation(pl.Callback):
         self.predictions = []
         self.references = []
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
-        # Сохраняем данные о предсказаниях и эталонах
-        if hasattr(pl_module, 'wer') and hasattr(pl_module.wer, 'decoding'):
-            # Получаем последние предсказания и эталоны
-            if hasattr(pl_module.wer, 'last_batch_hypotheses'):
-                self.predictions.extend(pl_module.wer.last_batch_hypotheses)
-            if hasattr(pl_module.wer, 'last_batch_references'):
-                self.references.extend(pl_module.wer.last_batch_references)
+    def _clean_text(self, text):
+        """Унифицированная функция очистки текста от пунктуации"""
+        if not isinstance(text, str):
+            return text
+        # Удаляем пунктуацию и приводим к нижнему регистру
+        cleaned = self.punctuation_pattern.sub('', text).lower()
+        # Удаляем лишние пробелы
+        return re.sub(r'\s+', ' ', cleaned).strip()
 
-    def on_validation_epoch_start(self, trainer, pl_module):
-        # Очищаем списки в начале эпохи
+    def on_validation_start(self, trainer, pl_module):
+        # Очищаем коллекции в начале валидации
         self.predictions = []
         self.references = []
 
-        # Монки-патчим метод update для сохранения данных
-        if hasattr(pl_module, 'wer'):
-            original_update = pl_module.wer.update
+        # Важно: НЕ заменяем метод, а просто подписываемся на результаты
+        if hasattr(pl_module, 'wer') and hasattr(pl_module.wer, 'compute'):
+            original_compute = pl_module.wer.compute
 
-            def patched_update(predictions, predictions_lengths, targets, targets_lengths,
-                               predictions_mask=None, input_ids=None):
-                # Вызываем оригинальный метод
-                result = original_update(predictions, predictions_lengths, targets,
-                                         targets_lengths, predictions_mask, input_ids)
+            def compute_hook(*args, **kwargs):
+                # Получаем оригинальный результат
+                result = original_compute(*args, **kwargs)
 
-                # Сохраняем последние обработанные данные
-                decoding = pl_module.wer.decoding
-                with torch.no_grad():
-                    tgt_lenths_cpu_tensor = targets_lengths.long().cpu()
-                    targets_cpu_tensor = targets.long().cpu()
+                # Собираем предсказания и эталоны через официальные методы API
+                # Это важно: мы не изменяем логику, а только собираем результаты
+                if hasattr(pl_module.wer, '_predictions') and hasattr(pl_module.wer, '_references'):
+                    # Используем синхронизированный вызов для сбора данных со всех ранков
+                    all_preds = trainer.strategy.all_gather(pl_module.wer._predictions)
+                    all_refs = trainer.strategy.all_gather(pl_module.wer._references)
 
-                    # Проверяем batch_dim_index
-                    if pl_module.wer.batch_dim_index != 0:
-                        targets_cpu_tensor = targets_cpu_tensor.transpose(0, pl_module.wer.batch_dim_index)
-
-                    # Собираем ссылки
-                    references = []
-                    for ind in range(targets_cpu_tensor.shape[0]):
-                        tgt_len = tgt_lenths_cpu_tensor[ind].item()
-                        target = targets_cpu_tensor[ind][:tgt_len].numpy().tolist()
-                        reference = decoding.decode_tokens_to_str(target)
-                        references.append(reference)
-
-                    # Получаем гипотезы
-                    hypotheses = pl_module.wer.decode(predictions, predictions_lengths,
-                                                      predictions_mask, input_ids, targets)
-
-                # Сохраняем данные для расчёта WER без пунктуации
-                pl_module.wer.last_batch_hypotheses = [h.text if hasattr(h, 'text') else h for h in hypotheses]
-                pl_module.wer.last_batch_references = references
+                    # Обрабатываем только на мастер-ранке для избежания дублирования
+                    if trainer.is_global_zero:
+                        self.predictions.extend(all_preds)
+                        self.references.extend(all_refs)
 
                 return result
 
-            # Заменяем метод
-            pl_module.wer.update = patched_update
+            # Сохраняем оригинальный метод
+            self._original_compute = original_compute
+            pl_module.wer.compute = compute_hook
 
     def on_validation_epoch_end(self, trainer, pl_module):
         """Рассчитываем WER без пунктуации и выводим обе метрики в понятном формате"""
         try:
+            # Важно: восстанавливаем оригинальный метод
+            if self._original_compute is not None and hasattr(pl_module, 'wer'):
+                pl_module.wer.compute = self._original_compute
+
+            # Выполняем расчёт только на мастер-ранке
+            if not trainer.is_global_zero:
+                return
+
             if not self.predictions or not self.references:
                 logging.warning("Недостаточно данных для расчёта WER без пунктуации")
                 return
@@ -80,30 +72,15 @@ class WERWithoutPunctuation(pl.Callback):
             original_wer = word_error_rate(self.predictions, self.references)
 
             # Очищаем тексты от пунктуации
-            cleaned_predictions = []
-            cleaned_references = []
-
-            for pred in self.predictions:
-                if isinstance(pred, str):
-                    # Удаляем пунктуацию и приводим к нижнему регистру
-                    cleaned_pred = self.punctuation_pattern.sub('', pred).lower()
-                    # Удаляем лишние пробелы
-                    cleaned_pred = re.sub(r'\s+', ' ', cleaned_pred).strip()
-                    cleaned_predictions.append(cleaned_pred)
-
-            for ref in self.references:
-                if isinstance(ref, str):
-                    # Удаляем пунктуацию и приводим к нижнему регистру
-                    cleaned_ref = self.punctuation_pattern.sub('', ref).lower()
-                    # Удаляем лишние пробелы
-                    cleaned_ref = re.sub(r'\s+', ' ', cleaned_ref).strip()
-                    cleaned_references.append(cleaned_ref)
+            cleaned_predictions = [self._clean_text(pred) for pred in self.predictions]
+            cleaned_references = [self._clean_text(ref) for ref in self.references]
 
             # Рассчитываем WER без пунктуации
             wer_no_punct = word_error_rate(cleaned_predictions, cleaned_references)
 
-            # Логируем метрику без пунктуации
-            pl_module.log('val_wer_no_punct', wer_no_punct, on_epoch=True, prog_bar=True, sync_dist=True)
+            # Логируем метрику без пунктуации — НА ВСЕХ РАНКАХ ОДИНАКОВО
+            # sync_dist=False, т.к. мы уже агрегировали данные
+            pl_module.log('val_wer_no_punct', wer_no_punct, on_epoch=True, prog_bar=True, sync_dist=False)
 
             # Добавляем в словарь метрик для EarlyStopping
             trainer.callback_metrics["val_wer_no_punct"] = torch.tensor(wer_no_punct)
