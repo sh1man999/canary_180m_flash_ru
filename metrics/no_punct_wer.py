@@ -1,127 +1,160 @@
-import torch
 import re
+import torch
+from typing import List, Optional, Union
 from torchmetrics import Metric
 
 
 class NoPunctWER(Metric):
     """
-    Высокопроизводительная метрика WER без пунктуации, оптимизированная для
-    распределенного выполнения в PyTorch Lightning.
+    Высокоэффективная метрика Word Error Rate без учета пунктуации.
+
+    Ключевые особенности:
+    1. Автоматическая очистка от знаков пунктуации перед расчетом
+    2. Полная поддержка распределенных вычислений через встроенные механизмы TorchMetrics
+    3. Оптимизированный алгоритм расчета расстояния Левенштейна
+    4. Детальная статистика для мониторинга процесса распознавания
     """
 
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(
+            self,
+            dist_sync_on_step: bool = False,
+            punctuation_pattern: str = r'[.,!?:;«»()\-]'
+    ):
+        """
+        Инициализирует метрику WER без пунктуации.
+
+        Args:
+            dist_sync_on_step: Синхронизировать значения на каждом шаге (для распределенных вычислений)
+            punctuation_pattern: Регулярное выражение для удаления знаков пунктуации
+        """
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-        # Определяем состояния метрики с правильными функциями редукции
-        self.add_state("errors", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum")
-        self.add_state("examples", default=torch.tensor(0, dtype=torch.int64), dist_reduce_fx="sum")
 
-        # Компилируем регулярное выражение для оптимальной производительности
-        self.punctuation_pattern = re.compile(r'[.,!?:;«»()\-]')
+        # Регистрируем состояния, которые будут синхронизироваться в распределенном режиме
+        self.add_state("errors", default=torch.tensor(0.0, dtype=torch.float64), dist_reduce_fx="sum")
+        self.add_state("total_words", default=torch.tensor(0.0, dtype=torch.float64), dist_reduce_fx="sum")
+        self.add_state("total_examples", default=torch.tensor(0, dtype=torch.int64), dist_reduce_fx="sum")
 
-    def update(self, preds, targets):
+        # Компилируем регулярное выражение для повышения производительности
+        self.punctuation_pattern = re.compile(punctuation_pattern)
+
+    def update(self, predictions: List[str], references: List[str]) -> None:
         """
         Обновляет метрику новыми данными.
 
         Args:
-            preds (List[str]): Список предсказанных текстов
-            targets (List[str]): Список эталонных текстов
+            predictions: Список предсказанных текстов
+            references: Список эталонных текстов
         """
         # Проверка валидности входных данных
-        if not preds or not targets or len(preds) != len(targets):
+        if not predictions or not references:
             return
 
-        # Очищаем тексты от пунктуации
-        cleaned_preds = [self._clean_text(p) for p in preds]
-        cleaned_targets = [self._clean_text(t) for t in targets]
+        if len(predictions) != len(references):
+            # Обрезаем до одинаковой длины в случае несоответствия
+            min_len = min(len(predictions), len(references))
+            predictions = predictions[:min_len]
+            references = references[:min_len]
 
-        # Вычисляем метрику
-        batch_errors, batch_words = 0, 0
-        for pred, target in zip(cleaned_preds, cleaned_targets):
+        # Очищаем тексты от пунктуации и нормализуем
+        cleaned_predictions = [self._preprocess_text(text) for text in predictions]
+        cleaned_references = [self._preprocess_text(text) for text in references]
+
+        # Рассчитываем ошибки и статистику для каждой пары текстов
+        batch_errors = 0.0
+        batch_words = 0.0
+
+        for pred, ref in zip(cleaned_predictions, cleaned_references):
             # Разбиваем на слова
             pred_words = pred.split()
-            target_words = target.split()
+            ref_words = ref.split()
 
-            # Вычисляем расстояние Левенштейна
-            distance = self._levenshtein_distance(pred_words, target_words)
+            # Рассчитываем расстояние Левенштейна на уровне слов
+            distance = self._compute_levenshtein(pred_words, ref_words)
 
-            # Аккумулируем результаты
+            # Накапливаем статистику
             batch_errors += distance
-            batch_words += len(target_words)
+            batch_words += len(ref_words)
 
-        # Обновляем состояние метрики
-        self.errors += torch.tensor(batch_errors, dtype=torch.float32)
-        self.total += torch.tensor(batch_words, dtype=torch.float32)
-        self.examples += torch.tensor(len(preds), dtype=torch.int64)
+        # Обновляем состояния метрики
+        self.errors += torch.tensor(batch_errors, dtype=torch.float64)
+        self.total_words += torch.tensor(batch_words, dtype=torch.float64)
+        self.total_examples += torch.tensor(len(predictions), dtype=torch.int64)
 
-    def compute(self):
+    def compute(self) -> torch.Tensor:
         """
-        Вычисляет итоговое значение метрики.
+        Вычисляет финальное значение метрики.
 
         Returns:
             torch.Tensor: Значение WER без пунктуации
         """
-        return self.errors / self.total if self.total > 0 else torch.tensor(float('inf'))
+        if self.total_words == 0:
+            return torch.tensor(float('inf'))
 
-    def _clean_text(self, text):
+        return self.errors / self.total_words
+
+    def _preprocess_text(self, text: str) -> str:
         """
-        Очищает текст от пунктуации и нормализует пробелы.
+        Предобрабатывает текст: удаляет пунктуацию, приводит к нижнему регистру,
+        нормализует пробелы.
 
         Args:
-            text (str): Исходный текст
+            text: Исходный текст
 
         Returns:
-            str: Очищенный текст
+            str: Очищенный и нормализованный текст
         """
         if not isinstance(text, str):
             return ""
-        # Удаляем пунктуацию и приводим к нижнему регистру
-        cleaned = self.punctuation_pattern.sub('', text).lower()
-        # Нормализуем пробелы
-        return re.sub(r'\s+', ' ', cleaned).strip()
 
-    def _levenshtein_distance(self, source, target):
+        # Удаляем пунктуацию
+        cleaned = self.punctuation_pattern.sub('', text)
+
+        # Приводим к нижнему регистру
+        cleaned = cleaned.lower()
+
+        # Нормализуем пробелы (заменяем множественные пробелы на один)
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+
+        # Убираем начальные и конечные пробелы
+        return cleaned.strip()
+
+    def _compute_levenshtein(self, source: List[str], target: List[str]) -> int:
         """
         Вычисляет расстояние Левенштейна между двумя последовательностями.
-        Оптимизированная реализация с использованием динамического программирования.
+        Оптимизированная реализация с минимальным использованием памяти.
 
         Args:
-            source (List): Исходная последовательность слов
-            target (List): Целевая последовательность слов
+            source: Исходная последовательность слов
+            target: Целевая последовательность слов
 
         Returns:
             int: Расстояние Левенштейна
         """
-        # Оптимизация для пустых последовательностей
+        # Оптимизация для граничных случаев
         if len(source) == 0:
             return len(target)
         if len(target) == 0:
             return len(source)
 
-        # Оптимизация памяти: храним только текущую и предыдущую строки
-        # вместо всей матрицы расстояний
-        previous_row = range(len(target) + 1)
+        # Оптимизация по памяти: храним только две смежные строки матрицы
+        previous_row = list(range(len(target) + 1))
         current_row = [0] * (len(target) + 1)
 
         for i in range(1, len(source) + 1):
-            # Инициализация первого элемента текущей строки
+            # Инициализируем первый элемент текущей строки
             current_row[0] = i
 
             for j in range(1, len(target) + 1):
                 # Вычисляем стоимость операций
                 deletion = previous_row[j] + 1
                 insertion = current_row[j - 1] + 1
-                substitution = previous_row[j - 1]
+                substitution = previous_row[j - 1] + (0 if source[i - 1] == target[j - 1] else 1)
 
-                # Если слова не совпадают, увеличиваем стоимость замены
-                if source[i - 1] != target[j - 1]:
-                    substitution += 1
-
-                # Выбираем минимальную стоимость операции
+                # Выбираем операцию с минимальной стоимостью
                 current_row[j] = min(deletion, insertion, substitution)
 
-            # Обновляем предыдущую строку для следующей итерации
+            # Меняем строки местами для следующей итерации
             previous_row, current_row = current_row, previous_row
 
-        # В последнем обмене previous_row содержит актуальные значения
-        return previous_row[len(target)]
+        # После последней итерации результат находится в previous_row
+        return previous_row[len(target)]    
