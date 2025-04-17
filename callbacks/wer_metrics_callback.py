@@ -10,9 +10,9 @@ class NoPunctWERCallback(pl.Callback):
     """
     Коллбэк Lightning для вычисления Word Error Rate без пунктуации.
     """
-    def __init__(self, punctuation_pattern: str = r'[.,!?:;«»()\-]'):
+    def __init__(self):
         super().__init__()
-        self.wer_metric = NoPunctWER(dist_sync_on_step=False, punctuation_pattern=punctuation_pattern)
+        self.wer_metric = NoPunctWER(dist_sync_on_step=False)
         self.val_predictions = []
         self.val_references = []
         self.test_predictions = []

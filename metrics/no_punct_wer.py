@@ -1,5 +1,7 @@
 import re
+import string
 from typing import List
+from unicodedata import normalize
 
 import torch
 from torchmetrics import Metric
@@ -16,7 +18,6 @@ class NoPunctWER(Metric):
     def __init__(
             self,
             dist_sync_on_step: bool = False,
-            punctuation_pattern: str = r'[.,!?:;«»()\-]'
     ):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
@@ -25,8 +26,6 @@ class NoPunctWER(Metric):
         self.add_state("word_count", default=torch.tensor(0.0, dtype=torch.float64), dist_reduce_fx="sum")
         self.add_state("sample_count", default=torch.tensor(0, dtype=torch.int64), dist_reduce_fx="sum")
 
-        # Компилируем регулярное выражение для оптимизации производительности
-        self.punctuation_pattern = re.compile(punctuation_pattern)
 
     def update(self, predictions: List[str], references: List[str]) -> None:
         """
@@ -98,18 +97,21 @@ class NoPunctWER(Metric):
         """
         if not isinstance(text, str):
             return ""
+        # Нормализация Unicode (NFKC)
+        text = normalize('NFKC', text)
 
-        # Удаление пунктуации
-        cleaned = self.punctuation_pattern.sub('', text)
+        # Создаем таблицу перевода для всех Unicode символов пунктуации
+        punctuation_chars = string.punctuation + '—–…«»„"\''
+        clean_text = text.translate(str.maketrans('', '', punctuation_chars))
 
-        # Приведение к нижнему регистру
-        cleaned = cleaned.lower()
+        # Приводим к нижнему регистру
+        clean_text = clean_text.lower()
 
-        # Нормализация пробелов (замена всех последовательностей пробельных символов на один пробел)
-        cleaned = re.sub(r'\s+', ' ', cleaned)
+        # Заменяем множественные пробелы на один
+        clean_text = ' '.join(clean_text.split())
 
         # Удаление начальных и конечных пробелов
-        return cleaned.strip()
+        return clean_text.strip()
 
     def _levenshtein_distance(self, source: List[str], target: List[str]) -> int:
         """
