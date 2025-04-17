@@ -48,6 +48,7 @@ NCCL_P2P_LEVEL=NVL NCCL_DEBUG=INFO TORCH_NCCL_TRACE_BUFFER_SIZE=1024 TORCH_ASYNC
     model.train_ds.batch_duration=360 \
     model.train_ds.num_buckets=30 \
     +model.train_ds.num_cuts_for_bins_estimate=10000 \
+    trainer.use_distributed_sampler=true \
     "+init_from_pretrained_model.model0.name=nvidia/canary-180m-flash" \
     "+init_from_pretrained_model.model0.exclude=[transf_decoder._embedding.token_embedding,log_softmax.mlp.layer0]"
 ```

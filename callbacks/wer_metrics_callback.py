@@ -69,7 +69,8 @@ class NoPunctWERCallback(pl.Callback):
                 self.val_predictions, self.val_references
             )
             
-            # Обновляем метрику только на главном процессе
+            wer_no_punct_value = float('inf')  # Default value if not rank 0
+            # Обновляем метрику, вычисляем и логируем детально только на главном процессе
             if not self._is_distributed or dist.get_rank() == 0:
                 self.wer_metric.update(all_predictions, all_references)
                 wer_no_punct_value = self.wer_metric.compute()
@@ -88,17 +89,12 @@ class NoPunctWERCallback(pl.Callback):
                 logging.info(f"║ Обработано примеров:{len(cleaned_references):<35}  ║")
                 logging.info("╚════════════════════════════════════════════════════════════╝")
 
-            # Синхронизируем метрику между процессами
-            if self._is_distributed:
-                if dist.get_rank() == 0:
-                    wer_tensor = torch.tensor(wer_no_punct_value, device=pl_module.device)
-                else:
-                    wer_tensor = torch.tensor(0.0, device=pl_module.device)
-                dist.broadcast(wer_tensor, src=0)
-                wer_no_punct_value = wer_tensor.item()
-
+            # Логируем метрику через Lightning. 
+            # sync_dist=True позаботится о синхронизации значения между процессами.
+            # Важно: pl_module.log должен вызываться на всех процессах.
             pl_module.log('val_wer_no_punct', wer_no_punct_value, sync_dist=True)
 
+            # Сбрасываем состояние метрики и списки на ВСЕХ процессах
             self.wer_metric.reset()
             self.val_predictions = []
             self.val_references = []
@@ -117,7 +113,8 @@ class NoPunctWERCallback(pl.Callback):
                 self.test_predictions, self.test_references
             )
             
-            # Обновляем метрику только на главном процессе
+            wer_no_punct_value = float('inf') # Default value if not rank 0
+            # Обновляем метрику, вычисляем и логируем детально только на главном процессе
             if not self._is_distributed or dist.get_rank() == 0:
                 self.wer_metric.update(all_predictions, all_references)
                 wer_no_punct_value = self.wer_metric.compute()
@@ -135,17 +132,12 @@ class NoPunctWERCallback(pl.Callback):
                 logging.info(f"║ Обработано примеров:{len(cleaned_references):<35}  ║")
                 logging.info("╚════════════════════════════════════════════════════════════╝")
 
-            # Синхронизируем метрику между процессами
-            if self._is_distributed:
-                if dist.get_rank() == 0:
-                    wer_tensor = torch.tensor(wer_no_punct_value, device=pl_module.device)
-                else:
-                    wer_tensor = torch.tensor(0.0, device=pl_module.device)
-                dist.broadcast(wer_tensor, src=0)
-                wer_no_punct_value = wer_tensor.item()
-
+            # Логируем метрику через Lightning.
+            # sync_dist=True позаботится о синхронизации значения между процессами.
+            # Важно: pl_module.log должен вызываться на всех процессах.
             pl_module.log('test_wer_no_punct', wer_no_punct_value, sync_dist=True)
 
+            # Сбрасываем состояние метрики и списки на ВСЕХ процессах
             self.wer_metric.reset()
             self.test_predictions = []
             self.test_references = []
