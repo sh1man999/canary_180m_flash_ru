@@ -43,7 +43,7 @@ NCCL_TIMEOUT=3600 NCCL_P2P_LEVEL=NVL NCCL_DEBUG=INFO TORCH_NCCL_TRACE_BUFFER_SIZ
     exp_manager.exp_dir="canary_results" \
     exp_manager.resume_ignore_no_checkpoint=true \
     trainer.max_steps=120000 \
-    batch_size=128 \
+    batch_size=32 \
     trainer.check_val_every_n_epoch=2 \
     model.train_ds.batch_duration=360 \
     model.train_ds.num_buckets=30 \
