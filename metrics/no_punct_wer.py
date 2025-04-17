@@ -1,4 +1,3 @@
-import re
 import string
 from typing import List
 from unicodedata import normalize

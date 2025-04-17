@@ -73,7 +73,8 @@ def main(cfg):
         verbose=True  # Подробный вывод информации
     )
     wer_no_punct_callback = NoPunctWERCallback()
-    trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer), callbacks=[wer_no_punct_callback, early_stop_callback],)
+    #trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer), callbacks=[wer_no_punct_callback, early_stop_callback],)
+    trainer = pl.Trainer(**resolve_trainer_cfg(cfg.trainer), )
     exp_manager(trainer, cfg.get("exp_manager", None))
 
     # Check for spl tokens to create spl_tokenizer.
